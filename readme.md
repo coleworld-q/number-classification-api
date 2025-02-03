@@ -105,7 +105,4 @@ This project is open-source and licensed under the MIT License.
 
 Feel free to fork the repository, submit issues, or send pull requests for improvements or bug fixes.
 
----
-
-
 
