@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 import requests
-import os
 
 app = Flask(__name__)
 
@@ -56,7 +55,11 @@ def classify_number():
     
     # Validate input
     if not number_str or not number_str.lstrip('-').isdigit():
-        return jsonify({"error": "Invalid input. Please provide a valid integer."}), 400
+        # Return the invalid number input along with an error message
+        return jsonify({
+            "error": "Invalid input. Please provide a valid integer.",
+            "number": number_str
+        }), 400
 
     number = int(number_str)
     properties = ["even" if number % 2 == 0 else "odd"]
@@ -75,12 +78,9 @@ def classify_number():
 
     return jsonify(response), 200
 
-# Welcome Page for root route
-@app.route('/')
-def welcome():
-    return "Welcome to the Number Classification API! Use /api/classify-number?number=7 to test."
+import os
 
-# Main entry point
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))  # Render provides a dynamic port
     app.run(host='0.0.0.0', port=port, debug=True)
+    

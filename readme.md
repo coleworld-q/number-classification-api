@@ -92,4 +92,4 @@ The API performs the following checks:
 
 ## License
 
-This project is open-source and licensed under the MIT License.
+This project is open-source and licensed under the MIT License
