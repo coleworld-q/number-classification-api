@@ -4,11 +4,6 @@ import os
 
 app = Flask(__name__)
 
-# Root route for the homepage
-@app.route('/')
-def home():
-    return "Welcome to the Number Classification API! Use /api/classify-number?number=7 to test."
-
 # Helper functions
 def is_prime(n):
     """Check if a number is prime."""
@@ -36,14 +31,14 @@ def digit_sum(n):
     return sum(int(d) for d in str(n))
 
 def get_fun_fact(n):
-    """Get a fun fact about a number."""
+    """Get a fun fact about a number. If it's an Armstrong number, generate a custom fact."""
     if is_armstrong(n):
         digits = [int(d) for d in str(n)]
         length = len(digits)
         armstrong_expression = " + ".join(f"{d}^{length}" for d in digits)
         return f"{n} is an Armstrong number because {armstrong_expression} = {n}"
     
-    # Fetch from Numbers API
+    # Fetch from Numbers API for other numbers
     try:
         response = requests.get(f"http://numbersapi.com/{n}/math?json", timeout=5)
         if response.status_code == 200:
@@ -80,7 +75,12 @@ def classify_number():
 
     return jsonify(response), 200
 
-# Ensure the app binds to the Render-provided PORT
+# Welcome Page for root route
+@app.route('/')
+def welcome():
+    return "Welcome to the Number Classification API! Use /api/classify-number?number=7 to test."
+
+# Main entry point
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # Default to 10000 if PORT is not set
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 8080))  # Render provides a dynamic port
+    app.run(host='0.0.0.0', port=port, debug=True)
