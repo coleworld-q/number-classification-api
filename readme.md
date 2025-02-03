@@ -90,19 +90,6 @@ The API performs the following checks:
 4. **Digit Sum**: Calculates the sum of the digits of the number.
 5. **Fun Fact**: Fetches a fun fact related to the number from the Numbers API.
 
-## Future Improvements
-
-- Add support for additional mathematical properties (e.g., Fibonacci, triangular numbers).
-- Implement more advanced error handling and input validation.
-- Add caching to reduce the load on the Numbers API.
-- Provide options for users to request a fun fact from specific categories (e.g., history, trivia).
-
 ## License
 
 This project is open-source and licensed under the MIT License.
-
-## Contributing
-
-Feel free to fork the repository, submit issues, or send pull requests for improvements or bug fixes.
-
-
