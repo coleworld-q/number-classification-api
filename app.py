@@ -6,8 +6,7 @@ app = Flask(__name__)
 
 # Helper functions
 def is_prime(n):
-    """Check if a number is prime. Only valid for integers."""
-    if n < 2 or n % 1 != 0:  # Exclude non-integers
+    if n < 2:
         return False
     for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
@@ -15,72 +14,57 @@ def is_prime(n):
     return True
 
 def is_perfect(n):
-    """Check if a number is a perfect number. Only valid for integers."""
-    if n < 2 or n % 1 != 0:  # Exclude non-integers
+    if n < 2:
         return False
-    return sum(i for i in range(1, int(n)) if n % i == 0) == n
+    return sum(i for i in range(1, n) if n % i == 0) == n
 
 def is_armstrong(n):
-    """Check if a number is an Armstrong number. Only valid for integers."""
-    if n % 1 != 0:  # Exclude non-integers
-        return False
-    digits = [int(d) for d in str(int(n))]
+    digits = [int(d) for d in str(abs(n))]  # Handle negative numbers safely
     length = len(digits)
-    return sum(d ** length for d in digits) == int(n)
+    return sum(d ** length for d in digits) == abs(n)
 
 def digit_sum(n):
-    """Calculate the sum of digits of a number (only for integers)."""
-    if n % 1 != 0:  # Exclude non-integers
-        return None
-    return sum(int(d) for d in str(int(n)))
+    return sum(int(d) for d in str(abs(n)))
 
 def get_fun_fact(n):
-    """Get a fun fact about a number. If it's an Armstrong number, generate a custom fact."""
-    if n % 1 != 0:  # Only request fun facts for integers
-        return "Fun facts are only available for integers."
-
     if is_armstrong(n):
-        digits = [int(d) for d in str(int(n))]
+        digits = [int(d) for d in str(abs(n))]
         length = len(digits)
         armstrong_expression = " + ".join(f"{d}^{length}" for d in digits)
-        return f"{int(n)} is an Armstrong number because {armstrong_expression} = {int(n)}"
+        return f"{n} is an Armstrong number because {armstrong_expression} = {n}"
     
-    # Fetch from Numbers API for other numbers
     try:
-        response = requests.get(f"http://numbersapi.com/{int(n)}/math?json", timeout=5)
+        response = requests.get(f"http://numbersapi.com/{n}/math?json", timeout=5)
         if response.status_code == 200:
             return response.json().get("text", "No fun fact available.")
     except requests.RequestException:
-        return "No fun fact available due to API error."
+        pass  # If the request fails, return a default message
 
     return "No fun fact available."
 
-# Root Endpoint - Now returns JSON instead of 404
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({
         "message": "Welcome to the Number Classification API!",
-        "usage": "Use /api/classify-number?number=<number> to classify a number."
+        "usage": "Use /api/classify-number?number=<integer> to classify a number."
     }), 200
 
-# API Endpoint
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
-    """Classify a number and return its mathematical properties."""
     number_str = request.args.get('number')
-    
-    # Validate input
+
+    # Input validation
     try:
-        number = float(number_str)  # Support integers & floating points
+        number = int(number_str)
     except (TypeError, ValueError):
         return jsonify({
             "error": True,
-            "message": "Invalid input. Please provide a valid number.",
+            "message": "Invalid input. Please provide a valid integer.",
             "number": number_str
         }), 400
 
-    properties = ["even" if number % 2 == 0 else "odd"] if number % 1 == 0 else ["floating-point"]
-
+    properties = ["even" if number % 2 == 0 else "odd"]
+    
     if is_armstrong(number):
         properties.append("armstrong")
 
@@ -90,13 +74,19 @@ def classify_number():
         "is_prime": is_prime(number),
         "is_perfect": is_perfect(number),
         "properties": properties,
-        "digit_sum": digit_sum(number),  # None for floats
+        "digit_sum": digit_sum(number),
         "fun_fact": get_fun_fact(number)
     }
 
     return jsonify(response), 200
 
-# Run the Flask app
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return jsonify({
+        "error": True,
+        "message": "An unexpected error occurred."
+    }), 500
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))  # Render provides a dynamic port
+    port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=True)
