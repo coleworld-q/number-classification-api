@@ -32,15 +32,17 @@ def get_fun_fact(n):
         length = len(digits)
         armstrong_expression = " + ".join(f"{d}^{length}" for d in digits)
         return f"{n} is an Armstrong number because {armstrong_expression} = {n}"
+    
     try:
         response = requests.get(f"http://numbersapi.com/{n}/math?json", timeout=5)
         if response.status_code == 200:
             return response.json().get("text", "No fun fact available.")
     except requests.RequestException:
         return "No fun fact available due to API error."
+    
     return "No fun fact available."
 
-# Root endpoint to prevent 404 error
+# Root endpoint
 @app.route('/')
 def home():
     return jsonify({
@@ -51,6 +53,7 @@ def home():
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
     number_str = request.args.get('number')
+    
     if not number_str or not number_str.lstrip('-').isdigit():
         return jsonify({
             "error": "Invalid input. Please provide a valid integer.",
@@ -59,6 +62,7 @@ def classify_number():
     
     number = int(number_str)
     properties = ["even" if number % 2 == 0 else "odd"]
+    
     if is_armstrong(number):
         properties.append("armstrong")
     
@@ -70,6 +74,7 @@ def classify_number():
         "digit_sum": digit_sum(number),
         "fun_fact": get_fun_fact(number)
     }
+    
     return jsonify(response), 200
 
 if __name__ == '__main__':
