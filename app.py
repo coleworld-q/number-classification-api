@@ -6,8 +6,8 @@ app = Flask(__name__)
 
 # Helper functions
 def is_prime(n):
-    """Check if a number is prime."""
-    if n < 2:
+    """Check if a number is prime. Only valid for integers."""
+    if n < 2 or n % 1 != 0:  # Exclude non-integers
         return False
     for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
@@ -15,32 +15,39 @@ def is_prime(n):
     return True
 
 def is_perfect(n):
-    """Check if a number is a perfect number."""
-    if n < 2:
+    """Check if a number is a perfect number. Only valid for integers."""
+    if n < 2 or n % 1 != 0:  # Exclude non-integers
         return False
-    return sum(i for i in range(1, n) if n % i == 0) == n
+    return sum(i for i in range(1, int(n)) if n % i == 0) == n
 
 def is_armstrong(n):
-    """Check if a number is an Armstrong number."""
-    digits = [int(d) for d in str(n)]
+    """Check if a number is an Armstrong number. Only valid for integers."""
+    if n % 1 != 0:  # Exclude non-integers
+        return False
+    digits = [int(d) for d in str(int(n))]
     length = len(digits)
-    return sum(d ** length for d in digits) == n
+    return sum(d ** length for d in digits) == int(n)
 
 def digit_sum(n):
-    """Calculate the sum of digits of a number."""
-    return sum(int(d) for d in str(n))
+    """Calculate the sum of digits of a number (only for integers)."""
+    if n % 1 != 0:  # Exclude non-integers
+        return None
+    return sum(int(d) for d in str(int(n)))
 
 def get_fun_fact(n):
     """Get a fun fact about a number. If it's an Armstrong number, generate a custom fact."""
+    if n % 1 != 0:  # Only request fun facts for integers
+        return "Fun facts are only available for integers."
+
     if is_armstrong(n):
-        digits = [int(d) for d in str(n)]
+        digits = [int(d) for d in str(int(n))]
         length = len(digits)
         armstrong_expression = " + ".join(f"{d}^{length}" for d in digits)
-        return f"{n} is an Armstrong number because {armstrong_expression} = {n}"
+        return f"{int(n)} is an Armstrong number because {armstrong_expression} = {int(n)}"
     
     # Fetch from Numbers API for other numbers
     try:
-        response = requests.get(f"http://numbersapi.com/{n}/math?json", timeout=5)
+        response = requests.get(f"http://numbersapi.com/{int(n)}/math?json", timeout=5)
         if response.status_code == 200:
             return response.json().get("text", "No fun fact available.")
     except requests.RequestException:
@@ -53,7 +60,7 @@ def get_fun_fact(n):
 def home():
     return jsonify({
         "message": "Welcome to the Number Classification API!",
-        "usage": "Use /api/classify-number?number=<integer> to classify a number."
+        "usage": "Use /api/classify-number?number=<number> to classify a number."
     }), 200
 
 # API Endpoint
@@ -63,16 +70,17 @@ def classify_number():
     number_str = request.args.get('number')
     
     # Validate input
-    if not number_str or not number_str.lstrip('-').isdigit():
+    try:
+        number = float(number_str)  # Support integers & floating points
+    except (TypeError, ValueError):
         return jsonify({
             "error": True,
-            "message": "Invalid input. Please provide a valid integer.",
+            "message": "Invalid input. Please provide a valid number.",
             "number": number_str
         }), 400
 
-    number = int(number_str)
-    properties = ["even" if number % 2 == 0 else "odd"]
-    
+    properties = ["even" if number % 2 == 0 else "odd"] if number % 1 == 0 else ["floating-point"]
+
     if is_armstrong(number):
         properties.append("armstrong")
 
@@ -82,7 +90,7 @@ def classify_number():
         "is_prime": is_prime(number),
         "is_perfect": is_perfect(number),
         "properties": properties,
-        "digit_sum": digit_sum(number),
+        "digit_sum": digit_sum(number),  # None for floats
         "fun_fact": get_fun_fact(number)
     }
 
