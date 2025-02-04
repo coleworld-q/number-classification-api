@@ -43,7 +43,9 @@ def get_fun_fact(n):
 # Root endpoint to prevent 404 error
 @app.route('/')
 def home():
-    return jsonify({"message": "Welcome to the Number Classification API! Use /api/classify-number?number=<num> to classify a number."})
+    return jsonify({
+        "message": "Welcome to the Number Classification API! Use /api/classify-number?number=<number> to classify a number."
+    })
 
 # API Endpoint
 @app.route('/api/classify-number', methods=['GET'])
